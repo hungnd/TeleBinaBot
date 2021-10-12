@@ -12,12 +12,14 @@ TELE_API_HASH = configParser.get('tele', 'ApiHash')
 ASSET_RATIO = float(configParser.get('main', 'AssetRatio'))
 LEVERAGE = float(configParser.get('main', 'Leverage'))
 CHANNEL_NAMES = configParser.get('main', 'ChannelName').strip().split(',')
+SYMBOL_MAP = dict(configParser.items('mapsym'))
 
 print('TELE_API_ID', TELE_API_ID)
 print('TELE_API_HASH', TELE_API_HASH)
 print('ASSET_RATIO', ASSET_RATIO)
 print('LEVERAGE', LEVERAGE)
 print('CHANNEL_NAME', CHANNEL_NAMES)
+print('SYMBOL_MAP', SYMBOL_MAP)
 
 client = TelegramClient(str(TELE_API_ID), TELE_API_ID, TELE_API_HASH)
 
@@ -35,14 +37,32 @@ def min_pos(haystack, needles):
       m = p
   return m
 
-def get_symbol(msg):  
+def map_symbol(sym):
+  for var in SYMBOL_MAP:
+    if var.casefold() == sym.casefold():
+      return SYMBOL_MAP.get(var)
+  return sym
+
+symbolRegex = re.compile(r'[#,$]\w+')
+def get_symbol_sign(msg):  
+  comp = symbolRegex.search(msg)
+  if comp is None: 
+    return None    
+  symbol = comp.group()
+  return symbol[1:]
+
+def get_symbol(msg):
   kw = min_pos(msg, ['buy', 'scalp'])
   if kw is None:
     return None
+
+  symbol = get_symbol_sign(msg)
+  if symbol is not None:
+    return map_symbol(symbol)
   
   sn = msg[0:kw]
   symbol = re.sub('[^A-Za-z0-9]+', '', sn)
-  return symbol
+  return map_symbol(symbol)
 
 @client.on(events.NewMessage)
 async def my_event_handler(event):
