@@ -7,6 +7,7 @@ import time
 import json
 import hmac
 import hashlib
+import math
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -25,6 +26,7 @@ print('BINA_API_KEY', BINA_API_KEY)
 print('BINA_SECRET_KEY', BINA_SECRET_KEY)
 
 precision = {}
+minNotion = {}
 
 def current_milli_time():
   return round(time.time() * 1000)
@@ -81,34 +83,52 @@ def getUSDTBalance():
   return float(usd)
 
 def placeOrder(symbol, value):
-  # preci = precision.get(symbol)
-  # if preci is None: 
-  #   print('Cannot find precision info of', symbol)
-  #   return
+  preci = precision.get(symbol)
+  if preci is None: 
+    print('Cannot find precision info of', symbol)
+    return
+
+  if minNotion.get(symbol) > value:
+    print('Not enough money', value, 'for minimum order value', minNotion.get(symbol))
+    return
 
   price = getPrice(symbol)
   quantity = value / price
+  quantity = "{:0.0{}f}".format(quantity , preci)
   print('Price ', symbol, price, 'quantity', quantity)
   order = {
     'symbol': symbol,
     'side': 'BUY',
-    # 'positionSide': 'LONG',
     'type': 'MARKET',
-    'quantity': "{:0.0{}f}".format(quantity , 8),
+    'quantity': quantity,
   }
   print('Order info: ', order)
   httpReqPost(orderApi, order)
   
+def getLotSize(filters):
+  for cre in filters:
+    if cre.get('filterType') == 'LOT_SIZE':
+      x = float(cre.get('stepSize'))
+      return int(math.log10(1/x))
+  return None
+
+def getMinNotion(filters):
+  for cre in filters:
+    if cre.get('filterType') == 'MIN_NOTIONAL':
+      x = float(cre.get('minNotional'))
+      return x
+  return None
+
 def loadPrecision():
   exins = httpReqGetAuthless(exchangeApi, {})
-  print(exins)
-  # for e in exins.get('symbols'):
-  #   precision[e.get('symbol')] = e.get('quantityPrecision')
+  # print(exins)
+  for e in exins.get('symbols'):
+    precision[e.get('symbol')] = getLotSize(e.get('filters')) 
+    minNotion[e.get('symbol')] = getMinNotion(e.get('filters')) 
 
 def getPrice(symbol):
   data = httpReqGetAuthless(priceApi, {'symbol': symbol})
   return float(data.get('price'))
 
 loadPrecision()
-# print(precision)
-# placeOrder('ETHUSDT', 0.04)
+# placeOrder('ETHUSDT', 10)
