@@ -16,7 +16,7 @@ configFilePath = r'config.txt'
 configParser.read(configFilePath)
 
 assetApi = 'https://api.binance.com/api/v3/account'
-orderApi = 'https://api.binance.com/api/v3/order/test'
+orderApi = 'https://api.binance.com/api/v3/order'
 exchangeApi = 'https://api.binance.com/api/v3/exchangeInfo'
 priceApi = 'https://api.binance.com/api/v3/ticker/price'
 
@@ -89,7 +89,7 @@ def placeOrder(symbol, value):
     return
 
   if minNotion.get(symbol) > value:
-    print('Not enough money', value, 'for minimum order value', minNotion.get(symbol))
+    print('Not enough money', value, 'for minimum order value', minNotion.get(symbol), 'USDT')
     return
 
   price = getPrice(symbol)
@@ -131,4 +131,3 @@ def getPrice(symbol):
   return float(data.get('price'))
 
 loadPrecision()
-# placeOrder('ETHUSDT', 10)
