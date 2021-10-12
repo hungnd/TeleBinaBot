@@ -7,16 +7,14 @@ configParser = configparser.RawConfigParser()
 configFilePath = r'config.txt'
 configParser.read(configFilePath)
 
-symbolRegex = re.compile(r'[#,$]\w+')
 def get_symbol(msg):  
-  comp = symbolRegex.search(msg)
-  if comp is None: 
-    return None    
-  symbol = comp.group()
-  return symbol[1:]
-
-def is_buy(msg):
-  return 'BUY' in msg
+  kw = min_pos(msg, ['buy', 'scalp'])
+  if kw is None:
+    return None
+  
+  sn = msg[0:kw]
+  symbol = re.sub('[^A-Za-z0-9]+', '', sn)
+  return symbol
 
 TELE_API_ID = configParser.get('tele', 'ApiId')
 TELE_API_HASH = configParser.get('tele', 'ApiHash')
@@ -55,8 +53,8 @@ async def my_event_handler(event):
   msg = msg.upper()
 
   symbol = get_symbol(msg)
-  if symbol is None or not is_buy(msg):
-    print('Not found symbol or BUY word')
+  if symbol is None:
+    print('Not found symbol or BUY keyword')
     return
 
   print('=======> Buy ' + symbol)
@@ -69,3 +67,17 @@ async def my_event_handler(event):
 
 client.start()
 client.run_until_disconnected()
+
+def find_pos(haystack, needle):
+  match = re.search(needle, haystack, re.IGNORECASE)
+  if match is None:
+    return None
+  return match.span()[0]
+
+def min_pos(haystack, needles):
+  m = None
+  for nd in needles:
+    p = find_pos(haystack, nd)
+    if p is not None and (m is None or m > p):
+      m = p
+  return m
