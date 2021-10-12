@@ -1,7 +1,7 @@
 
 [main]
 AssetRatio = 5
-ChannelName = BinaFutureSignal
+ChannelName = BinaFutureSignal,Crypto
 Leverage = 10
 
 [tele]
