@@ -14,10 +14,10 @@ configParser = configparser.RawConfigParser()
 configFilePath = r'config.txt'
 configParser.read(configFilePath)
 
-assetApi = 'https://fapi.binance.com/fapi/v2/balance'
-orderApi = 'https://fapi.binance.com/fapi/v1/order'
-exchangeApi = 'https://fapi.binance.com/fapi/v1/exchangeInfo'
-priceApi = 'https://fapi.binance.com/fapi/v1/ticker/price'
+assetApi = 'https://api.binance.com/api/v3/account'
+orderApi = 'https://api.binance.com/api/v3/order/test'
+exchangeApi = 'https://api.binance.com/api/v3/exchangeInfo'
+priceApi = 'https://api.binance.com/api/v3/ticker/price'
 
 BINA_API_KEY = configParser.get('binance', 'ApiKey')
 BINA_SECRET_KEY = configParser.get('binance', 'ApiSecret')
@@ -59,21 +59,32 @@ def httpReqGet(url, data):
   response = requests.get(url, headers=headers, verify=False)
   return response.json()
 
+def httpReqGetAuthless(url, data):
+  query = urlencode(data)
+  url = url + '?' + query
+  # print('url = ' + url)
+
+  headers = {
+    'Content-Type': 'application/json',
+  }
+  response = requests.get(url, headers=headers, verify=False)
+  return response.json()
+
 def getUSDTBalance(): 
   assets = httpReqGet(assetApi, {})
   usd = 0
   # print('Future balance:')
-  for e in assets:
+  for e in assets.get('balances'):
     # print(e.get('asset') + ': ' + e.get('balance'))
     if e.get('asset') == 'USDT':
-      usd = e.get('balance')
+      usd = e.get('free')
   return float(usd)
 
 def placeOrder(symbol, value):
-  preci = precision.get(symbol)
-  if preci is None: 
-    print('Cannot find precision info of', symbol)
-    return
+  # preci = precision.get(symbol)
+  # if preci is None: 
+  #   print('Cannot find precision info of', symbol)
+  #   return
 
   price = getPrice(symbol)
   quantity = value / price
@@ -83,18 +94,21 @@ def placeOrder(symbol, value):
     'side': 'BUY',
     # 'positionSide': 'LONG',
     'type': 'MARKET',
-    'quantity': "{:0.0{}f}".format(quantity , preci),
+    'quantity': "{:0.0{}f}".format(quantity , 8),
   }
   print('Order info: ', order)
   httpReqPost(orderApi, order)
   
 def loadPrecision():
-  exins = httpReqGet(exchangeApi, {})
-  for e in exins.get('symbols'):
-    precision[e.get('symbol')] = e.get('quantityPrecision')
+  exins = httpReqGetAuthless(exchangeApi, {})
+  print(exins)
+  # for e in exins.get('symbols'):
+  #   precision[e.get('symbol')] = e.get('quantityPrecision')
 
 def getPrice(symbol):
-  data = httpReqGet(priceApi, {'symbol': symbol})
+  data = httpReqGetAuthless(priceApi, {'symbol': symbol})
   return float(data.get('price'))
 
 loadPrecision()
+# print(precision)
+# placeOrder('ETHUSDT', 0.04)
