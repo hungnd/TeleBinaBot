@@ -7,6 +7,34 @@ configParser = configparser.RawConfigParser()
 configFilePath = r'config.txt'
 configParser.read(configFilePath)
 
+TELE_API_ID = configParser.get('tele', 'ApiId')
+TELE_API_HASH = configParser.get('tele', 'ApiHash')
+ASSET_RATIO = float(configParser.get('main', 'AssetRatio'))
+LEVERAGE = float(configParser.get('main', 'Leverage'))
+CHANNEL_NAMES = configParser.get('main', 'ChannelName').strip().split(',')
+
+print('TELE_API_ID', TELE_API_ID)
+print('TELE_API_HASH', TELE_API_HASH)
+print('ASSET_RATIO', ASSET_RATIO)
+print('LEVERAGE', LEVERAGE)
+print('CHANNEL_NAME', CHANNEL_NAMES)
+
+client = TelegramClient(str(TELE_API_ID), TELE_API_ID, TELE_API_HASH)
+
+def find_pos(haystack, needle):
+  match = re.search(needle, haystack, re.IGNORECASE)
+  if match is None:
+    return None
+  return match.span()[0]
+
+def min_pos(haystack, needles):
+  m = None
+  for nd in needles:
+    p = find_pos(haystack, nd)
+    if p is not None and (m is None or m > p):
+      m = p
+  return m
+
 def get_symbol(msg):  
   kw = min_pos(msg, ['buy', 'scalp'])
   if kw is None:
@@ -15,20 +43,6 @@ def get_symbol(msg):
   sn = msg[0:kw]
   symbol = re.sub('[^A-Za-z0-9]+', '', sn)
   return symbol
-
-TELE_API_ID = configParser.get('tele', 'ApiId')
-TELE_API_HASH = configParser.get('tele', 'ApiHash')
-ASSET_RATIO = float(configParser.get('main', 'AssetRatio'))
-LEVERAGE = float(configParser.get('main', 'Leverage'))
-CHANNEL_NAME = configParser.get('main', 'ChannelName')
-
-print('TELE_API_ID', TELE_API_ID)
-print('TELE_API_HASH', TELE_API_HASH)
-print('ASSET_RATIO', ASSET_RATIO)
-print('LEVERAGE', LEVERAGE)
-print('CHANNEL_NAME', CHANNEL_NAME)
-
-client = TelegramClient(str(TELE_API_ID), TELE_API_ID, TELE_API_HASH)
 
 @client.on(events.NewMessage)
 async def my_event_handler(event):
@@ -42,8 +56,13 @@ async def my_event_handler(event):
     return
 
   print('New message from channel "', chat.title, '" ...')
-  if CHANNEL_NAME not in chat.title:
-    return 
+  wlChannel = False
+  for chName in CHANNEL_NAMES:
+    if chName in chat.title:
+      wlChannel = True
+      break
+  if not wlChannel: 
+    return
 
   msg = event.raw_text
   print('---- Content Start ----')
@@ -68,16 +87,3 @@ async def my_event_handler(event):
 client.start()
 client.run_until_disconnected()
 
-def find_pos(haystack, needle):
-  match = re.search(needle, haystack, re.IGNORECASE)
-  if match is None:
-    return None
-  return match.span()[0]
-
-def min_pos(haystack, needles):
-  m = None
-  for nd in needles:
-    p = find_pos(haystack, nd)
-    if p is not None and (m is None or m > p):
-      m = p
-  return m
