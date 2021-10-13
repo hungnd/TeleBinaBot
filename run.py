@@ -52,7 +52,7 @@ def get_symbol_sign(msg):
   symbol = comp.group()
   return symbol[1:]
 
-plusPercentRegex = re.compile(r'\+([0-9]\.)\w+%')
+plusPercentRegex = re.compile(r'\+([0-9\.])*%')
 def ignoreMsg(msg):
   if min_pos(msg, IGNORE_WORDS) is not None:
     return True
