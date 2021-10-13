@@ -52,6 +52,11 @@ def get_symbol_sign(msg):
   return symbol[1:]
 
 def get_symbol(msg):
+  isSell = min_pos(msg, ['short', 'close'])
+  if isSell is not None:
+    print('This is sell / short message.')
+    return None
+    
   kw = min_pos(msg, ['buy', 'scalp'])
   if kw is None:
     return None
