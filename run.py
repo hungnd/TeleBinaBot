@@ -12,6 +12,7 @@ TELE_API_HASH = configParser.get('tele', 'ApiHash')
 ASSET_RATIO = float(configParser.get('main', 'AssetRatio'))
 LEVERAGE = float(configParser.get('main', 'Leverage'))
 CHANNEL_NAMES = configParser.get('main', 'ChannelName').strip().split(',')
+IGNORE_WORDS = configParser.get('main', 'IgnoreWords').strip().split(',')
 SYMBOL_MAP = dict(configParser.items('mapsym'))
 
 print('TELE_API_ID', TELE_API_ID)
@@ -51,12 +52,21 @@ def get_symbol_sign(msg):
   symbol = comp.group()
   return symbol[1:]
 
+plusPercentRegex = re.compile(r'\+([0-9]\.)\w+%')
+def ignoreMsg(msg):
+  if min_pos(msg, IGNORE_WORDS) is not None:
+    return True
+
+  if plusPercentRegex.search(msg) is not None:
+    return True
+
+  return False
+
 def get_symbol(msg):
-  isSell = min_pos(msg, ['short', 'close'])
-  if isSell is not None:
-    print('This is sell / short message.')
+  if ignoreMsg(msg):
+    print('This message should be ignored')
     return None
-    
+
   kw = min_pos(msg, ['buy', 'scalp'])
   if kw is None:
     return None
@@ -98,7 +108,7 @@ async def my_event_handler(event):
 
   symbol = get_symbol(msg)
   if symbol is None:
-    print('Not found symbol or BUY keyword')
+    print('Not found symbol or message is ignored')
     return
 
   print('=======> Buy ' + symbol)
