@@ -14,6 +14,8 @@ LEVERAGE = float(configParser.get('main', 'Leverage'))
 CHANNEL_NAMES = configParser.get('main', 'ChannelName').strip().split(',')
 IGNORE_WORDS = configParser.get('main', 'IgnoreWords').strip().split(',')
 SYMBOL_MAP = dict(configParser.items('mapsym'))
+SYMBOL_LIST = list(SYMBOL_MAP.keys())
+SYMBOL_LIST.extend(list(bina.get_symbol_list()))
 
 print('TELE_API_ID', TELE_API_ID)
 print('TELE_API_HASH', TELE_API_HASH)
@@ -21,6 +23,7 @@ print('ASSET_RATIO', ASSET_RATIO)
 print('LEVERAGE', LEVERAGE)
 print('CHANNEL_NAME', CHANNEL_NAMES)
 print('SYMBOL_MAP', SYMBOL_MAP)
+# print('SYMBOL_LIST', SYMBOL_LIST)
 
 client = TelegramClient(str(TELE_API_ID), TELE_API_ID, TELE_API_HASH)
 
@@ -71,13 +74,22 @@ def get_symbol(msg):
   if kw is None:
     return None
 
-  symbol = get_symbol_sign(msg)
-  if symbol is not None:
-    return map_symbol(symbol)
+  # symbol = get_symbol_sign(msg)
+  # if symbol is not None:
+  #   return map_symbol(symbol)
   
   sn = msg[0:kw]
-  symbol = re.sub('[^A-Za-z0-9]+', '', sn)
-  return map_symbol(symbol)
+  # cleanDesc = re.sub('[^A-Za-z0-9\s]+', '', sn)
+  cleanDesc = re.sub('[^A-Za-z0-9]+', '', sn)
+  words = cleanDesc.split()
+  print(words)
+  
+  for symbol in SYMBOL_LIST: 
+    if symbol in cleanDesc:
+      return map_symbol(symbol)
+
+  print('Cannot find symbol')
+  return None
 
 @client.on(events.NewMessage)
 async def my_event_handler(event):
