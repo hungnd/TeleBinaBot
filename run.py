@@ -125,7 +125,5 @@ async def my_event_handler(event):
   symbol = symbol + 'USDT'
   bina.placeOrder(symbol, budget)
 
-# client.start()
-# client.run_until_disconnected()
-
-logging.info('%s', get_symbol('$B.TC buy short'))
+client.start()
+client.run_until_disconnected()
