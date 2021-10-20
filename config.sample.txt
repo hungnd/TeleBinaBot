@@ -1,8 +1,7 @@
 
-[main]
-AssetRatio = 5
-ChannelName = BinaFutureSignal,Crypto
-Leverage = 10
+[order]
+BTCUSDT = 0.1
+SHIBUSDT = 100000
 
 [tele]
 ApiId = 

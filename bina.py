@@ -59,6 +59,7 @@ def httpReqGet(url, data):
     'X-MBX-APIKEY': BINA_API_KEY
   }
   response = requests.get(url, headers=headers, verify=False)
+  print(response)
   return response.json()
 
 def httpReqGetAuthless(url, data):
@@ -75,7 +76,6 @@ def httpReqGetAuthless(url, data):
 def getUSDTBalance(): 
   assets = httpReqGet(assetApi, {})
   usd = 0
-  # print('Future balance:')
   for e in assets.get('balances'):
     # print(e.get('asset') + ': ' + e.get('balance'))
     if e.get('asset') == 'USDT':
@@ -129,5 +129,13 @@ def loadPrecision():
 def getPrice(symbol):
   data = httpReqGetAuthless(priceApi, {'symbol': symbol})
   return float(data.get('price'))
+
+def get_symbol_list():
+  newlist = list()
+  for sym in precision.keys(): 
+    if '_' in sym: 
+      continue
+    newlist.append(sym[:-4])
+  return newlist
 
 loadPrecision()
