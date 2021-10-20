@@ -115,7 +115,7 @@ def placeOrder(symbol, value):
     'type': 'MARKET',
     'quantity': quantity,
   }
-  print('Order info: ', order)
+  logging.info('Order info: %s', order)
   httpReqPost(orderApi, order)
   queryUSDTBalance()
   
@@ -147,7 +147,7 @@ def getPrice(symbol):
 def get_symbol_list():
   newlist = list()
   for sym in precision.keys(): 
-    if '_' in sym: 
+    if '_' in sym or sym[-4:] != 'USDT': 
       continue
     newlist.append(sym[:-4])
   return newlist

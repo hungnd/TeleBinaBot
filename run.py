@@ -73,16 +73,16 @@ def get_symbol(msg):
   if kw is None:
     return None
 
-  # symbol = get_symbol_sign(msg)
-  # if symbol is not None:
-  #   return map_symbol(symbol)
+  symbol = get_symbol_sign(msg)
+  if symbol is not None:
+    return map_symbol(symbol)
   
-  sn = msg[0:kw]
-  cleanDesc = re.sub('[^A-Za-z0-9]+', '', sn)
+  # sn = msg[0:kw]
+  # cleanDesc = re.sub('[^A-Za-z0-9]+', '', sn)
   
-  for symbol in SYMBOL_LIST: 
-    if re.search(symbol, cleanDesc, re.IGNORECASE):
-      return map_symbol(symbol)
+  # for symbol in SYMBOL_LIST: 
+  #   if re.search(symbol, cleanDesc, re.IGNORECASE):
+  #     return map_symbol(symbol)
 
   logging.error('Cannot find symbol')
   return None
