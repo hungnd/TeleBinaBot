@@ -57,12 +57,13 @@ def httpReqGet(url, data):
     'X-MBX-APIKEY': BINA_API_KEY
   }
   response = requests.get(url, headers=headers, verify=False)
+  print(response)
   return response.json()
 
 def getUSDTBalance(): 
   assets = httpReqGet(assetApi, {})
   usd = 0
-  # print('Future balance:')
+  print('Future balance:')
   for e in assets:
     # print(e.get('asset') + ': ' + e.get('balance'))
     if e.get('asset') == 'USDT':

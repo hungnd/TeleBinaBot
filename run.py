@@ -23,7 +23,7 @@ print('ASSET_RATIO', ASSET_RATIO)
 print('LEVERAGE', LEVERAGE)
 print('CHANNEL_NAME', CHANNEL_NAMES)
 print('SYMBOL_MAP', SYMBOL_MAP)
-# print('SYMBOL_LIST', SYMBOL_LIST)
+print('SYMBOL_LIST', SYMBOL_LIST)
 
 client = TelegramClient(str(TELE_API_ID), TELE_API_ID, TELE_API_HASH)
 
@@ -81,11 +81,11 @@ def get_symbol(msg):
   sn = msg[0:kw]
   # cleanDesc = re.sub('[^A-Za-z0-9\s]+', '', sn)
   cleanDesc = re.sub('[^A-Za-z0-9]+', '', sn)
-  words = cleanDesc.split()
-  print(words)
+  # words = cleanDesc.split()
+  # print(words)
   
   for symbol in SYMBOL_LIST: 
-    if symbol in cleanDesc:
+    if re.search(symbol, cleanDesc, re.IGNORECASE):
       return map_symbol(symbol)
 
   print('Cannot find symbol')
@@ -133,4 +133,3 @@ async def my_event_handler(event):
 
 client.start()
 client.run_until_disconnected()
-
