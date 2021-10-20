@@ -8,6 +8,7 @@ import json
 import hmac
 import hashlib
 import math
+import threading
 import logging
 logging.basicConfig(format='%(asctime)s [%(levelname)s] - %(message)s', datefmt='%d-%b-%y %H:%M:%S', level=logging.INFO)
 
@@ -29,6 +30,7 @@ logging.info('BINA_SECRET_KEY %s', BINA_SECRET_KEY)
 
 precision = {}
 minNotion = {}
+walletBalance = 0
 
 def current_milli_time():
   return round(time.time() * 1000)
@@ -79,10 +81,16 @@ def httpReqGetAuthless(url, data):
   return response.json()
 
 def getUSDTBalance(): 
+  global walletBalance
+  if walletBalance > 0:
+    return walletBalance
+  walletBalance = queryUSDTBalance()
+  return walletBalance
+
+def queryUSDTBalance(): 
   assets = httpReqGet(assetApi, {})
   usd = 0
   for e in assets.get('balances'):
-    # print(e.get('asset') + ': ' + e.get('balance'))
     if e.get('asset') == 'USDT':
       usd = e.get('free')
   return float(usd)
@@ -109,6 +117,7 @@ def placeOrder(symbol, value):
   }
   print('Order info: ', order)
   httpReqPost(orderApi, order)
+  queryUSDTBalance()
   
 def getLotSize(filters):
   for cre in filters:
@@ -144,3 +153,18 @@ def get_symbol_list():
   return newlist
 
 loadPrecision()
+
+interval = 60
+
+def intervalQueryBalance():
+  global walletBalance
+  walletBalance = queryUSDTBalance()
+  logging.info("Your current balance: %s USDT", walletBalance)
+
+def startTimer():
+  t = threading.Timer(interval, startTimer)
+  t.daemon = True
+  t.start()
+  intervalQueryBalance()
+
+startTimer()
