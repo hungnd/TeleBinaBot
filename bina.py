@@ -8,6 +8,8 @@ import json
 import hmac
 import hashlib
 import math
+import logging
+logging.basicConfig(format='%(asctime)s [%(levelname)s] - %(message)s', datefmt='%d-%b-%y %H:%M:%S', level=logging.INFO)
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -22,8 +24,8 @@ priceApi = 'https://api.binance.com/api/v3/ticker/price'
 
 BINA_API_KEY = configParser.get('binance', 'ApiKey')
 BINA_SECRET_KEY = configParser.get('binance', 'ApiSecret')
-print('BINA_API_KEY', BINA_API_KEY)
-print('BINA_SECRET_KEY', BINA_SECRET_KEY)
+logging.info('BINA_API_KEY %s', BINA_API_KEY)
+logging.info('BINA_SECRET_KEY %s', BINA_SECRET_KEY)
 
 precision = {}
 minNotion = {}
@@ -42,9 +44,9 @@ def httpReqPost(url, body):
     'Content-Type': 'application/json',
     'X-MBX-APIKEY': BINA_API_KEY
   }
-
+  logging.info('request: %s', url)
   response = requests.post(url, headers=headers, verify=False)
-  print(response.json())
+  logging.info('response: %s', response.json())
 
 def httpReqGet(url, data):
   data['timestamp'] = current_milli_time()
@@ -58,8 +60,9 @@ def httpReqGet(url, data):
     'Content-Type': 'application/json',
     'X-MBX-APIKEY': BINA_API_KEY
   }
+  logging.info('request: %s', url)
   response = requests.get(url, headers=headers, verify=False)
-  print(response)
+  logging.info('response: %s', response)
   return response.json()
 
 def httpReqGetAuthless(url, data):
@@ -70,7 +73,9 @@ def httpReqGetAuthless(url, data):
   headers = {
     'Content-Type': 'application/json',
   }
+  logging.info('request: %s', url)
   response = requests.get(url, headers=headers, verify=False)
+  logging.info('response: %s', response)
   return response.json()
 
 def getUSDTBalance(): 
@@ -85,17 +90,17 @@ def getUSDTBalance():
 def placeOrder(symbol, value):
   preci = precision.get(symbol)
   if preci is None: 
-    print('Cannot find precision info of', symbol)
+    logging.error('Cannot find precision info of %s', symbol)
     return
 
   if minNotion.get(symbol) > value:
-    print('Not enough money', value, 'for minimum order value', minNotion.get(symbol), 'USDT')
+    logging.error('Not enough money (%s) USDT for minimum order value (%s) USDT', value, minNotion.get(symbol))
     return
 
   price = getPrice(symbol)
   quantity = value / price
   quantity = "{:0.0{}f}".format(quantity , preci)
-  print('Price ', symbol, price, 'quantity', quantity)
+  logging.info('Price %s = %s, quantity = %s', symbol, price, quantity)
   order = {
     'symbol': symbol,
     'side': 'BUY',
