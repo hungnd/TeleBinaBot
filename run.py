@@ -2,6 +2,8 @@ import configparser
 from telethon import TelegramClient, events
 import bina
 import re
+import logging
+logging.basicConfig(format='%(asctime)s [%(levelname)s] - %(message)s', datefmt='%d-%b-%y %H:%M:%S', level=logging.INFO)
 
 configParser = configparser.RawConfigParser()   
 configFilePath = r'config.txt'
@@ -17,13 +19,13 @@ SYMBOL_MAP = dict(configParser.items('mapsym'))
 SYMBOL_LIST = list(SYMBOL_MAP.keys())
 SYMBOL_LIST.extend(list(bina.get_symbol_list()))
 
-print('TELE_API_ID', TELE_API_ID)
-print('TELE_API_HASH', TELE_API_HASH)
-print('ASSET_RATIO', ASSET_RATIO)
-print('LEVERAGE', LEVERAGE)
-print('CHANNEL_NAME', CHANNEL_NAMES)
-print('SYMBOL_MAP', SYMBOL_MAP)
-print('SYMBOL_LIST', SYMBOL_LIST)
+logging.info('TELE_API_ID %s', TELE_API_ID)
+logging.info('TELE_API_HASH %s', TELE_API_HASH)
+logging.info('ASSET_RATIO %s', ASSET_RATIO)
+logging.info('LEVERAGE %s', LEVERAGE)
+logging.info('CHANNEL_NAME %s', CHANNEL_NAMES)
+logging.info('SYMBOL_MAP %s', SYMBOL_MAP)
+logging.info('SYMBOL_LIST %s', SYMBOL_LIST)
 
 client = TelegramClient(str(TELE_API_ID), TELE_API_ID, TELE_API_HASH)
 
@@ -67,7 +69,7 @@ def ignoreMsg(msg):
 
 def get_symbol(msg):
   if ignoreMsg(msg):
-    print('This message should be ignored')
+    logging.warning('This message should be ignored')
     return None
 
   kw = min_pos(msg, ['buy', 'scalp'])
@@ -88,7 +90,7 @@ def get_symbol(msg):
     if re.search(symbol, cleanDesc, re.IGNORECASE):
       return map_symbol(symbol)
 
-  print('Cannot find symbol')
+  logging.error('Cannot find symbol')
   return None
 
 @client.on(events.NewMessage)
@@ -102,7 +104,7 @@ async def my_event_handler(event):
   if chatType != 'Channel':
     return
 
-  print('New message from channel "', chat.title, '" ...')
+  logging.info('New message from channel "%s" ...', chat.title)
   wlChannel = False
   for chName in CHANNEL_NAMES:
     if chName in chat.title:
@@ -112,21 +114,20 @@ async def my_event_handler(event):
     return
 
   msg = event.raw_text
-  print('---- Content Start ----')
-  print(msg)
-  print('---- Content End ----')
+  logging.info('---- Content Start ---- \n %s \n ---- Content End ----', msg)
+
 
   msg = msg.upper()
 
   symbol = get_symbol(msg)
   if symbol is None:
-    print('Not found symbol or message is ignored')
+    logging.error('Not found symbol or message is ignored')
     return
 
-  print('=======> Buy ' + symbol)
+  logging.info('=======> Buy %s', symbol)
   balance = bina.getUSDTBalance()
   budget = balance * ASSET_RATIO / 100 * LEVERAGE
-  print('Balance ', str(balance), ' -> buy ', str(budget), ' USDT')
+  logging.info('Balance %s -> buy %s USDT', str(balance), str(budget))
 
   symbol = symbol + 'USDT'
   bina.placeOrder(symbol, budget)
