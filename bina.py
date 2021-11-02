@@ -28,6 +28,7 @@ logging.info('BINA_API_KEY %s', BINA_API_KEY)
 logging.info('BINA_SECRET_KEY %s', BINA_SECRET_KEY)
 
 precision = {}
+maxQtty = {}
 walletBalance = 0
 
 def current_milli_time():
@@ -90,7 +91,7 @@ def placeOrder(symbol, value):
     return
 
   price = getPrice(symbol)
-  quantity = value / price
+  quantity = min(maxQtty[symbol], value / price)
   logging.info('Price %s = %s, quantity = %s', symbol, price, quantity)
   order = {
     'symbol': symbol,
@@ -107,6 +108,13 @@ def loadPrecision():
   exins = httpReqGet(exchangeApi, {})
   for e in exins.get('symbols'):
     precision[e.get('symbol')] = e.get('quantityPrecision')
+    maxQtty[e.get('symbol')] = int(filter(e.get('filters'), 'MARKET_LOT_SIZE', 'maxQty'))
+
+def filter(data, key, value):
+  for f in data:
+    if f.get('filterType') == key:
+      return f.get(value)
+  return None
 
 def getPrice(symbol):
   data = httpReqGet(priceApi, {'symbol': symbol})
