@@ -80,9 +80,11 @@ def get_symbol(msg):
   # if symbol is not None:
   #   return map_symbol(symbol)
   
-  sn = msg[0:kw]
+  sn = msg[0:min(kw+12,len(msg))]
+  sn = re.sub(r'(buy*)\w+', '', sn, flags=re.IGNORECASE)
+  sn = re.sub(r'(scalp*)\w+', '', sn, flags=re.IGNORECASE)
   # cleanDesc = re.sub('[^A-Za-z0-9\s]+', '', sn)
-  cleanDesc = re.sub('[^A-Za-z0-9]+', '', sn)
+  cleanDesc = re.sub('[^A-Za-z0-9\s]+', '', sn)
   # words = cleanDesc.split()
   # print(words)
   
@@ -92,6 +94,9 @@ def get_symbol(msg):
 
   logging.error('Cannot find symbol')
   return None
+
+def findWholeWord(w):
+  return re.compile(r'\b({0})\b'.format(w), flags=re.IGNORECASE).search
 
 @client.on(events.NewMessage)
 async def my_event_handler(event):
