@@ -15,6 +15,7 @@ ASSET_RATIO = float(configParser.get('main', 'AssetRatio'))
 LEVERAGE = float(configParser.get('main', 'Leverage'))
 CHANNEL_NAMES = configParser.get('main', 'ChannelName').strip().split(',')
 IGNORE_WORDS = configParser.get('main', 'IgnoreWords').strip().split(',')
+BUY_WORDS = configParser.get('main', 'BuyWords').strip().split(',')
 SYMBOL_MAP = dict(configParser.items('mapsym'))
 SYMBOL_LIST = list(SYMBOL_MAP.keys())
 SYMBOL_LIST.extend(list(bina.get_symbol_list()))
@@ -24,6 +25,7 @@ logging.info('TELE_API_HASH %s', TELE_API_HASH)
 logging.info('ASSET_RATIO %s', ASSET_RATIO)
 logging.info('LEVERAGE %s', LEVERAGE)
 logging.info('CHANNEL_NAME %s', CHANNEL_NAMES)
+logging.info('BUY_WORDS %s', BUY_WORDS)
 logging.info('SYMBOL_MAP %s', SYMBOL_MAP)
 logging.info('SYMBOL_LIST %s', SYMBOL_LIST)
 
@@ -72,7 +74,7 @@ def get_symbol(msg):
     logging.warning('This message should be ignored')
     return None
 
-  kw = min_pos(msg, ['buy', 'scalp'])
+  kw = min_pos(msg, BUY_WORDS)
   if kw is None:
     return None
 
@@ -81,12 +83,10 @@ def get_symbol(msg):
   #   return map_symbol(symbol)
   
   sn = msg[0:min(kw+12,len(msg))]
-  sn = re.sub(r'(buy*)\w+', '', sn, flags=re.IGNORECASE)
-  sn = re.sub(r'(scalp*)\w+', '', sn, flags=re.IGNORECASE)
-  # cleanDesc = re.sub('[^A-Za-z0-9\s]+', '', sn)
-  cleanDesc = re.sub('[^A-Za-z0-9\s]+', '', sn)
-  # words = cleanDesc.split()
-  # print(words)
+  for bword in BUY_WORDS:
+    sn = re.sub(r"(" + bword + "*)\w+", '', sn, flags=re.IGNORECASE)
+
+  cleanDesc = re.sub('[^A-Za-z0-9]+', '', sn)
   
   for symbol in SYMBOL_LIST: 
     if re.search(symbol, cleanDesc, re.IGNORECASE):

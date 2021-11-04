@@ -1,7 +1,13 @@
 
-[order]
-BTCUSDT = 0.1
-SHIBUSDT = 100000
+[main]
+AssetRatio = 5
+ChannelName = Rose,Crypto
+Leverage = 10
+IgnoreWords = short,close,sell,yesterday,minute
+BuyWords = buy,scalp,long
+
+[mapsym]
+D0T=DOT
 
 [tele]
 ApiId = 

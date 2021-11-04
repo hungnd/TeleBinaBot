@@ -80,7 +80,7 @@ def queryUSDTBalance():
   for e in assets:
     # print(e.get('asset') + ': ' + e.get('balance'))
     if e.get('asset') == 'USDT':
-      usd = e.get('balance')
+      usd = e.get('availableBalance')
   logging.info("Your current balance: %s USDT", walletBalance)
   return float(usd)
 
