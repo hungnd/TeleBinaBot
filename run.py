@@ -1,5 +1,8 @@
 import configparser
 from telethon import TelegramClient, events
+import pytesseract
+import time
+import pathlib
 import bina
 import re
 import logging
@@ -98,14 +101,29 @@ def get_symbol(msg):
 def findWholeWord(w):
   return re.compile(r'\b({0})\b'.format(w), flags=re.IGNORECASE).search
 
+def get_symbol_image(text):
+  for symbol in SYMBOL_LIST:     
+    if re.search(symbol + 'USDT', text, re.IGNORECASE) or findWholeWord(symbol)(text):
+      return map_symbol(symbol)
+  return None
+
 @client.on(events.NewMessage)
 async def my_event_handler(event):
-  chat = await event.get_chat()
+  if event.photo:
+    filePath = r'tmp/' + str(time.time()) + '.jpg'
+    await event.download_media(filePath)
+    print(filePath)
+    text = pytesseract.image_to_string(filePath)
+    print(get_symbol_image(text))
+    pathlib.Path(filePath).unlink(missing_ok = True)
+    return
+
+  chat = await event.get_chat() 
   sender = await event.get_sender()
   chat_id = event.chat_id
   sender_id = event.sender_id
   
-  chatType = type(chat).__name__
+  chatType = type(chat).__name__ 
   if chatType != 'Channel':
     return
 
