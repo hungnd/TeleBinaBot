@@ -13,6 +13,9 @@ D0T=DOT
 ApiId = 
 ApiHash = 
 
+[tera]
+Path =
+
 [binance]
 ApiKey = 
 ApiSecret = 

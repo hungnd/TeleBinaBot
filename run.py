@@ -14,6 +14,7 @@ configParser.read(configFilePath)
 
 TELE_API_ID = configParser.get('tele', 'ApiId')
 TELE_API_HASH = configParser.get('tele', 'ApiHash')
+TESSERACT_PATH = configParser.get('tera', 'Path')
 ASSET_RATIO = float(configParser.get('main', 'AssetRatio'))
 LEVERAGE = float(configParser.get('main', 'Leverage'))
 CHANNEL_NAMES = configParser.get('main', 'ChannelName').strip().split(',')
@@ -25,12 +26,16 @@ SYMBOL_LIST.extend(list(bina.get_symbol_list()))
 
 logging.info('TELE_API_ID %s', TELE_API_ID)
 logging.info('TELE_API_HASH %s', TELE_API_HASH)
+logging.info('TESSERACT_PATH %s', TESSERACT_PATH)
 logging.info('ASSET_RATIO %s', ASSET_RATIO)
 logging.info('LEVERAGE %s', LEVERAGE)
 logging.info('CHANNEL_NAME %s', CHANNEL_NAMES)
 logging.info('BUY_WORDS %s', BUY_WORDS)
 logging.info('SYMBOL_MAP %s', SYMBOL_MAP)
 logging.info('SYMBOL_LIST %s', SYMBOL_LIST)
+
+if TESSERACT_PATH:
+  pytesseract.pytesseract.tesseract_cmd = TESSERACT_PATH
 
 client = TelegramClient(str(TELE_API_ID), TELE_API_ID, TELE_API_HASH)
 
