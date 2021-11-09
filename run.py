@@ -107,17 +107,23 @@ def get_symbol_image(text):
       return map_symbol(symbol)
   return None
 
-@client.on(events.NewMessage)
-async def my_event_handler(event):
+async def extract_symbol(event):
   if event.photo:
     filePath = r'tmp/' + str(time.time()) + '.jpg'
     await event.download_media(filePath)
     print(filePath)
     text = pytesseract.image_to_string(filePath)
-    print(get_symbol_image(text))
     pathlib.Path(filePath).unlink(missing_ok = True)
-    return
+    symbol = get_symbol_image(text)
+    return symbol
 
+  msg = event.raw_text
+  logging.info('---- Content Start ---- \n %s \n ---- Content End ----', msg)
+  msg = msg.upper()
+  return get_symbol(msg)
+
+@client.on(events.NewMessage)
+async def my_event_handler(event):
   chat = await event.get_chat() 
   sender = await event.get_sender()
   chat_id = event.chat_id
@@ -136,13 +142,7 @@ async def my_event_handler(event):
   if not wlChannel: 
     return
 
-  msg = event.raw_text
-  logging.info('---- Content Start ---- \n %s \n ---- Content End ----', msg)
-
-
-  msg = msg.upper()
-
-  symbol = get_symbol(msg)
+  symbol = await extract_symbol(event)
   if symbol is None:
     logging.error('Not found symbol or message is ignored')
     return
