@@ -1,5 +1,6 @@
 import configparser
 from telethon import TelegramClient, events
+import cv2
 import pytesseract
 import time
 import pathlib
@@ -108,19 +109,44 @@ def findWholeWord(w):
 
 def get_symbol_image(text):
   for symbol in SYMBOL_LIST:     
-    if re.search(symbol + 'USDT', text, re.IGNORECASE) or findWholeWord(symbol)(text):
+    if re.search(symbol + 'USD', text, re.IGNORECASE) or findWholeWord(symbol)(text):
       return map_symbol(symbol)
   return None
+
+def crop_image(img):
+  height, width, _ = img.shape
+  hc = 50
+  wc = int(width / 2)
+  img_gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+
+  crop_img = img_gray[0:0+hc, 0:0+wc]
+  cv2.imwrite('tmp/1.jpg', crop_img)
+  cv2.imshow('image', crop_img)
+  text = pytesseract.image_to_string(crop_img)
+  logging.info('Read text from img: %s', text)
+  print(text)
+  symbol = get_symbol_image(text)
+  if symbol:
+    return symbol
+
+  crop_img = img_gray[height-hc:height, 0:0+wc]
+  cv2.imwrite('tmp/2.jpg', crop_img)
+  text = pytesseract.image_to_string(crop_img)
+  logging.info('Read text from img: %s', text)
+  symbol = get_symbol_image(text)
+  if symbol:
+    return symbol
+
+  return None
+  
 
 async def extract_symbol(event):
   if event.photo:
     filePath = r'tmp/' + str(time.time()) + '.jpg'
     await event.download_media(filePath)
-    print(filePath)
-    text = pytesseract.image_to_string(filePath)
+    img = cv2.imread(filePath)
     pathlib.Path(filePath).unlink(missing_ok = True)
-    symbol = get_symbol_image(text)
-    return symbol
+    return crop_image(img)
 
   msg = event.raw_text
   logging.info('---- Content Start ---- \n %s \n ---- Content End ----', msg)
