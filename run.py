@@ -79,10 +79,6 @@ def ignoreMsg(msg):
   return False
 
 def get_symbol(msg):
-  if ignoreMsg(msg):
-    logging.warning('This message should be ignored')
-    return None
-
   kw = min_pos(msg, BUY_WORDS)
   if kw is None:
     return None
@@ -144,6 +140,11 @@ async def extract_symbol(event):
   msg = event.raw_text
   logging.info('---- Content Start ---- \n %s \n ---- Content End ----', msg)
   msg = msg.upper()
+  
+  if ignoreMsg(msg):
+    logging.warning('This message should be ignored')
+    return None
+
   symbol = get_symbol(msg)
   if symbol:
     return symbol
