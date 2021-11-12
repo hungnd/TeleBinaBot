@@ -141,6 +141,13 @@ def crop_image(img):
   
 
 async def extract_symbol(event):
+  msg = event.raw_text
+  logging.info('---- Content Start ---- \n %s \n ---- Content End ----', msg)
+  msg = msg.upper()
+  symbol = get_symbol(msg)
+  if symbol:
+    return symbol
+
   if event.photo:
     filePath = r'tmp/' + str(time.time()) + '.jpg'
     await event.download_media(filePath)
@@ -148,10 +155,7 @@ async def extract_symbol(event):
     pathlib.Path(filePath).unlink(missing_ok = True)
     return crop_image(img)
 
-  msg = event.raw_text
-  logging.info('---- Content Start ---- \n %s \n ---- Content End ----', msg)
-  msg = msg.upper()
-  return get_symbol(msg)
+  return None
 
 @client.on(events.NewMessage)
 async def my_event_handler(event):
