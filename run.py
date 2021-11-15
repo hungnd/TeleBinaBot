@@ -3,6 +3,8 @@ from telethon import TelegramClient, events
 import cv2
 import pytesseract
 import time
+import threading
+import queue
 import pathlib
 import bina
 import re
@@ -16,6 +18,7 @@ configParser.read(configFilePath)
 TELE_API_ID = configParser.get('tele', 'ApiId')
 TELE_API_HASH = configParser.get('tele', 'ApiHash')
 TESSERACT_PATH = configParser.get('tera', 'Path')
+CROP_HEIGHTS = configParser.get('tera', 'CropHeight').strip().split(',')
 ASSET_RATIO = float(configParser.get('main', 'AssetRatio'))
 LEVERAGE = float(configParser.get('main', 'Leverage'))
 CHANNEL_NAMES = configParser.get('main', 'ChannelName').strip().split(',')
@@ -28,6 +31,7 @@ SYMBOL_LIST.extend(list(bina.get_symbol_list()))
 logging.info('TELE_API_ID %s', TELE_API_ID)
 logging.info('TELE_API_HASH %s', TELE_API_HASH)
 logging.info('TESSERACT_PATH %s', TESSERACT_PATH)
+logging.info('CROP_HEIGHTS %s', CROP_HEIGHTS)
 logging.info('ASSET_RATIO %s', ASSET_RATIO)
 logging.info('LEVERAGE %s', LEVERAGE)
 logging.info('CHANNEL_NAME %s', CHANNEL_NAMES)
@@ -109,29 +113,32 @@ def get_symbol_image(text):
       return map_symbol(symbol)
   return None
 
+def crop_and_read(img, q):
+  text = pytesseract.image_to_string(img)
+  logging.info('Read text from img: %s', text)
+  symbol = get_symbol_image(text)
+  q.put(symbol)
+
 def crop_image(img):
   height, width, _ = img.shape
-  hc = 50
   wc = int(width / 2)
   img_gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
-  crop_img = img_gray[0:0+hc, 0:0+wc]
-  cv2.imwrite('tmp/1.jpg', crop_img)
-  cv2.imshow('image', crop_img)
-  text = pytesseract.image_to_string(crop_img)
-  logging.info('Read text from img: %s', text)
-  print(text)
-  symbol = get_symbol_image(text)
-  if symbol:
-    return symbol
+  q = queue.Queue()
+  threads = []
+  for hc in CROP_HEIGHTS:
+    hc = int(hc)
+    crop = img_gray[0:hc, 0:wc] if hc > 0 else img_gray[height+hc:height, 0:wc]
+    t = threading.Thread(target = crop_and_read, args = (crop, q,))
+    threads.append(t)
+    t.start()
 
-  crop_img = img_gray[height-hc:height, 0:0+wc]
-  cv2.imwrite('tmp/2.jpg', crop_img)
-  text = pytesseract.image_to_string(crop_img)
-  logging.info('Read text from img: %s', text)
-  symbol = get_symbol_image(text)
-  if symbol:
-    return symbol
+  for t in threads:
+    t.join()
+
+  for elem in list(q.queue):
+    if elem:
+      return elem
 
   return None
   
@@ -170,6 +177,7 @@ async def my_event_handler(event):
     return
 
   logging.info('New message from channel "%s" ...', chat.title)
+  start = current_milli_time()
   wlChannel = False
   for chName in CHANNEL_NAMES:
     if chName in chat.title:
@@ -183,13 +191,16 @@ async def my_event_handler(event):
     logging.error('Not found symbol or message is ignored')
     return
 
-  logging.info('=======> Buy %s', symbol)
+  logging.info('=======> Buy %s, take %d ms', symbol, current_milli_time() - start)
   balance = bina.getUSDTBalance()
   budget = balance * ASSET_RATIO / 100 * LEVERAGE
   logging.info('Balance %s -> buy %s USDT', str(balance), str(budget))
 
   symbol = symbol + 'USDT'
   bina.placeOrder(symbol, budget)
+
+def current_milli_time():
+  return round(time.time() * 1000)
 
 client.start()
 client.run_until_disconnected()

@@ -15,6 +15,7 @@ ApiHash =
 
 [tera]
 Path =
+CropHeight = 50, 20, -50
 
 [binance]
 ApiKey = 
