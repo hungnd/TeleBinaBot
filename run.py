@@ -93,10 +93,9 @@ def get_symbol(msg):
   
   sn = msg[0:min(kw+12,len(msg))]
   for bword in BUY_WORDS:
-    sn = re.sub(r"(" + bword + "*)\w+", '', sn, flags=re.IGNORECASE)
+    sn = re.sub(r"(" + bword + "*)\w+", '\n', sn, flags=re.IGNORECASE)
 
-  cleanDesc = re.sub('[^A-Za-z0-9]+', '', sn)
-  
+  cleanDesc = re.sub('[^A-Za-z0-9\n]+', '', sn)
   for symbol in SYMBOL_LIST: 
     if re.search(symbol, cleanDesc, re.IGNORECASE):
       return map_symbol(symbol)
