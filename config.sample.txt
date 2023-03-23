@@ -5,6 +5,7 @@ ChannelName = Rose,Crypto
 Leverage = 10
 IgnoreWords = short,close,sell,yesterday,minute
 BuyWords = buy,scalp,long
+SellWords = sell,short
 
 [mapsym]
 D0T=DOT
@@ -15,6 +16,7 @@ ApiHash =
 
 [tera]
 Path = # executable tesseract
+CropHeight = 50, 20, -50
 
 [binance]
 ApiKey = 

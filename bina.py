@@ -106,12 +106,31 @@ def placeOrder(symbol, value):
   logging.info('Order info: %s', order)
   httpReqPost(orderApi, order)
   queryUSDTBalance()
+
+def placeOrder(symbol, side, value):
+  preci = precision.get(symbol)
+  if preci is None: 
+    logging.warning('Cannot find precision info of %s', symbol)
+    return
+
+  price = getPrice(symbol)
+  quantity = min(maxQtty[symbol], value / price)
+  logging.info('Price %s = %s, quantity = %s', symbol, price, quantity)
+  order = {
+    'symbol': symbol,
+    'side': side,
+    'type': 'MARKET',
+    'quantity': "{:0.0{}f}".format(quantity , preci),
+  }
+  logging.info('Order info: %s', order)
+  httpReqPost(orderApi, order)
+  queryUSDTBalance()
   
 def loadPrecision():
   exins = httpReqGet(exchangeApi, {})
   for e in exins.get('symbols'):
     precision[e.get('symbol')] = e.get('quantityPrecision')
-    maxQtty[e.get('symbol')] = int(filter(e.get('filters'), 'MARKET_LOT_SIZE', 'maxQty'))
+    maxQtty[e.get('symbol')] = float(filter(e.get('filters'), 'MARKET_LOT_SIZE', 'maxQty'))
 
 def filter(data, key, value):
   for f in data:
