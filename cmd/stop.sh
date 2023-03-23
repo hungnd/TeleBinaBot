@@ -1,0 +1,1 @@
+ssh vps "sh TeleBinaBot/stop.sh"
