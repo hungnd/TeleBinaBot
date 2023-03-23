@@ -1,3 +1,16 @@
+import logging
+from datetime import datetime
+from pytz import timezone
+
+tz = timezone('asia/ho_chi_minh')
+logging.Formatter.converter = lambda *args: datetime.now(tz).timetuple()
+logging.basicConfig(
+  filename="app.log",
+  filemode='a',
+  format='%(asctime)s [%(levelname)s] - %(message)s', 
+  datefmt='%d-%b-%y %H:%M:%S', 
+  level=logging.INFO)
+
 import configparser
 from telethon import TelegramClient, events
 import cv2
@@ -6,8 +19,6 @@ import time
 import pathlib
 import bina
 import re
-import logging
-logging.basicConfig(format='%(asctime)s [%(levelname)s] - %(message)s', datefmt='%d-%b-%y %H:%M:%S', level=logging.INFO)
 
 configParser = configparser.RawConfigParser()   
 configFilePath = r'config.txt'
