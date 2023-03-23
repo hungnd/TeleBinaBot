@@ -14,7 +14,7 @@ ApiId =
 ApiHash = 
 
 [tera]
-Path =
+Path = # executable tesseract
 
 [binance]
 ApiKey = 

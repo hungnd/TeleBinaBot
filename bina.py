@@ -24,6 +24,7 @@ priceApi = 'https://fapi.binance.com/fapi/v1/ticker/price'
 
 BINA_API_KEY = configParser.get('binance', 'ApiKey')
 BINA_SECRET_KEY = configParser.get('binance', 'ApiSecret')
+RECV_WINDOW = 100000
 logging.info('BINA_API_KEY %s', BINA_API_KEY)
 logging.info('BINA_SECRET_KEY %s', BINA_SECRET_KEY)
 
@@ -36,6 +37,7 @@ def current_milli_time():
 
 def httpReqPost(url, body):
   body['timestamp'] = current_milli_time()
+  body['recvWindow'] = RECV_WINDOW
   query = urlencode(body)
   signature = hmac.new(bytes(BINA_SECRET_KEY , 'latin-1'), msg = bytes(query , 'latin-1'), digestmod = hashlib.sha256).hexdigest().upper()
   url = url + '?' + query + '&signature=' + signature
@@ -52,6 +54,7 @@ def httpReqPost(url, body):
 
 def httpReqGet(url, data):
   data['timestamp'] = current_milli_time()
+  data['recvWindow'] = RECV_WINDOW
   query = urlencode(data)
   signature = hmac.new(bytes(BINA_SECRET_KEY , 'latin-1'), msg = bytes(query , 'latin-1'), digestmod = hashlib.sha256).hexdigest().upper()
   
