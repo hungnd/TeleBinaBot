@@ -25,9 +25,11 @@ CHANNEL_NAMES = configParser.get('main', 'ChannelName').strip().split(',')
 IGNORE_WORDS = configParser.get('main', 'IgnoreWords').strip().split(',')
 BUY_WORDS = configParser.get('main', 'BuyWords').strip().split(',')
 SELL_WORDS = configParser.get('main', 'SellWords').strip().split(',')
+SYMBOL_BLACKLIST = configParser.get('main', 'BlackList').strip().lower().split(',')
 SYMBOL_MAP = dict(configParser.items('mapsym'))
 SYMBOL_LIST = list(SYMBOL_MAP.keys())
 SYMBOL_LIST.extend(list(bina.get_symbol_list()))
+SYMBOL_LIST = [e for e in SYMBOL_LIST if e not in SYMBOL_BLACKLIST]
 
 logging.info('TELE_API_ID %s', TELE_API_ID)
 logging.info('TELE_API_HASH %s', TELE_API_HASH)

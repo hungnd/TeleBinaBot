@@ -6,6 +6,7 @@ Leverage = 10
 IgnoreWords = short,close,sell,yesterday,minute
 BuyWords = buy,scalp,long
 SellWords = sell,short
+BlackList = MKR
 
 [mapsym]
 D0T=DOT
