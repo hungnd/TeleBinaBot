@@ -16,7 +16,7 @@ ApiHash =
 
 [tera]
 Path = # executable tesseract
-CropHeight = 50, 20, -50
+Crop = 50,50%|20,50%|-50,50%|100,80%|100%,30%
 
 [binance]
 ApiKey = 

@@ -18,7 +18,7 @@ configParser.read(configFilePath)
 TELE_API_ID = configParser.get('tele', 'ApiId')
 TELE_API_HASH = configParser.get('tele', 'ApiHash')
 TESSERACT_PATH = configParser.get('tera', 'Path')
-CROP_HEIGHTS = configParser.get('tera', 'CropHeight').strip().split(',')
+CROPS = [r.strip().split(",") for r in [r for r in configParser.get('tera', 'Crop').strip().split('|')]]
 ASSET_RATIO = float(configParser.get('main', 'AssetRatio'))
 LEVERAGE = float(configParser.get('main', 'Leverage'))
 CHANNEL_NAMES = configParser.get('main', 'ChannelName').strip().split(',')
@@ -32,7 +32,7 @@ SYMBOL_LIST.extend(list(bina.get_symbol_list()))
 logging.info('TELE_API_ID %s', TELE_API_ID)
 logging.info('TELE_API_HASH %s', TELE_API_HASH)
 logging.info('TESSERACT_PATH %s', TESSERACT_PATH)
-logging.info('CROP_HEIGHTS %s', CROP_HEIGHTS)
+logging.info('CROPS %s', CROPS)
 logging.info('ASSET_RATIO %s', ASSET_RATIO)
 logging.info('LEVERAGE %s', LEVERAGE)
 logging.info('CHANNEL_NAME %s', CHANNEL_NAMES)
@@ -127,9 +127,13 @@ def crop_image(img):
 
   q = queue.Queue()
   threads = []
-  for hc in CROP_HEIGHTS:
-    hc = int(hc)
-    crop = img_gray[0:hc, 0:wc] if hc > 0 else img_gray[height+hc:height, 0:wc]
+  for delta in CROPS:
+    hc, wc = calcRect(delta, height, width)
+    if wc >= 0:
+      crop = img_gray[0:hc, 0:wc] if hc > 0 else img_gray[height+hc:height, 0:wc]
+    else:
+      crop = img_gray[0:hc, width+wc:width] if hc > 0 else img_gray[height+hc:height, width+wc:width]
+    
     t = threading.Thread(target = crop_and_read, args = (crop, q,))
     threads.append(t)
     t.start()
@@ -143,6 +147,14 @@ def crop_image(img):
 
   return None
   
+def calcRect(delta, h, w):
+  dh, dw = delta[0], delta[1]
+  dh = int(dh) if dh[-1] != '%' else int(h * float(dh[:-1]) / 100)
+  dw = int(dw) if dw[-1] != '%' else int(w * float(dw[:-1]) / 100)
+  dh = min(abs(dh), h) * dh / abs(dh)
+  dw = min(abs(dw), w) * dw / abs(dw)
+  logging.info('crop h:%d w:%d part %d %d', h, w, dh, dw)
+  return int(dh), int(dw)
 
 async def extract_symbol(event):
   msg = event.raw_text

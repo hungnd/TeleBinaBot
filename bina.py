@@ -67,7 +67,7 @@ def httpReqGet(url, data):
   }
   logging.info('request: %s', url)
   response = requests.get(url, headers=headers, verify=False)
-  logging.info('response: %s', response)
+  logging.info('response: %s', response.json())
   return response.json()
 
 def getUSDTBalance(): 
