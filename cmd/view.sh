@@ -1,0 +1,1 @@
+ssh vps "tail -f TeleBinaBot/app.log"

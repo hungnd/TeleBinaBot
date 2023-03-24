@@ -1,3 +1,16 @@
+import logging
+from datetime import datetime
+from pytz import timezone
+
+tz = timezone('asia/ho_chi_minh')
+logging.Formatter.converter = lambda *args: datetime.now(tz).timetuple()
+logging.basicConfig(
+  filename="app.log",
+  filemode='a',
+  format='%(asctime)s [%(levelname)s] - %(message)s', 
+  datefmt='%d-%b-%y %H:%M:%S', 
+  level=logging.INFO)
+
 import configparser
 from urllib.parse import urlencode
 import urllib3
@@ -8,8 +21,6 @@ import json
 import hmac
 import hashlib
 import threading
-import logging
-logging.basicConfig(format='%(asctime)s [%(levelname)s] - %(message)s', datefmt='%d-%b-%y %H:%M:%S', level=logging.INFO)
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
